@@ -61,6 +61,7 @@ impl Lexer {
                             let literal = &self.source[starting_pos..self.pos];
 
                             token = Token::new(lookup_indentifier(literal), literal, self.line);
+                            return token;
                         } else if self.is_numeric(Some(c)) {
                             // Read Number
                             let starting_pos = self.pos;
@@ -73,6 +74,7 @@ impl Lexer {
 
 
                             token = Token::new(TokenKind::Int, literal, self.line);
+                            return token;
                         }else {
                             _ = eprintln!("LINE {:?} Unexpected character", self.line);
                             token = Token::new(TokenKind::Illegal, char_str, self.line);
@@ -118,7 +120,7 @@ impl Lexer {
         let mut found_non_ws = false;
         while !found_non_ws {
             if let Some(c) = self.cc {
-                if c == ' ' || c == '\t' {
+                if c == ' ' || c == '\t' || c == '\r' {
                     self.read();
                 } else {
                     found_non_ws = true;
@@ -136,6 +138,7 @@ impl Lexer {
 
 #[cfg(test)]
 mod lexer_tests {
+    use std::fs;
     use crate::lexer::lexer::Lexer;
     use crate::token::token::Token;
     use crate::token::token_kind::TokenKind;
@@ -170,17 +173,9 @@ mod lexer_tests {
     #[test]
     fn basic_add() {
         println!("[lexer_tests]: basic main");
-        let delim_and_ops: String = String::from(
-            r#"
-            var ten = 10
-            var five = 5
 
-            var added = add(five, ten)
-            
-            func add(x, y) {
-                return x + y
-            }"#
-        );
+        let bytes: String = fs::read_to_string("src/tests/icy/add.icy").expect("File could not be found");
+        
         let test_tokens: Vec<Token> = vec![
             Token::new(TokenKind::Newline, "\n", 1),
             // var ten = 10
@@ -209,8 +204,9 @@ mod lexer_tests {
             Token::new(TokenKind::LParen, "(", 5),
             Token::new(TokenKind::Ident, "five", 5),
             Token::new(TokenKind::Comma, ",", 5),
-            Token::new(TokenKind::Ident, "10", 5),
+            Token::new(TokenKind::Ident, "ten", 5),
             Token::new(TokenKind::RParen, ")", 5),
+            Token::new(TokenKind::Newline, "\n", 5),
 
             Token::new(TokenKind::Newline, "\n", 6),
 
@@ -237,14 +233,14 @@ mod lexer_tests {
 
         ];
 
-        let mut lexer: Lexer = Lexer::new(&delim_and_ops);
+        let mut lexer: Lexer = Lexer::new(bytes.as_str());
 
         for (_index, tt) in test_tokens.iter().enumerate() {
             let token = lexer.next();
 
-            println!("{:?}", token.literal);
-            // assert_eq!(token.kind, tt.kind);
-            // assert_eq!(token.literal, tt.literal);
+            // println!("{:?}", token.literal);
+            assert_eq!(token.kind, tt.kind);
+            assert_eq!(token.literal, tt.literal);
         }
     }
 }

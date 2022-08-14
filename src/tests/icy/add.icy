@@ -1,0 +1,9 @@
+
+var ten = 10
+var five = 5
+
+var added = add(five, ten)
+
+func add(x, y) {
+    return x + y
+}

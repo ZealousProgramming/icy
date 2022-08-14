@@ -3,6 +3,7 @@ use phf::{phf_map, Map};
 
 use super::token_kind::TokenKind;
 
+#[allow(dead_code)]
 static KEYWORDS: phf::Map<&'static str, TokenKind> = phf_map!{
     "func" => TokenKind::Function,
     "var" => TokenKind::Var,
