@@ -1,29 +1,73 @@
-// use std::{
-//     env,
-//     process,
-//     fs
-// };
-
+use std::io::Write;
+use std::{
+    env,
+    process,
+    // fs,
+};
 mod lexer;
 mod token;
 
+use crate::lexer::lexer::Lexer;
+use crate::token::token_kind::TokenKind;
+
 fn main() {
-    println!("Hello world");
+
+    let args: Vec<String> = env::args().collect();
+    let args_len: usize = args.len();
+
+    // let _cmd_args = parse_args(&args);
+
+
+
+    if args_len > 2 {
+        eprintln!("Usage: icy [script_name].icy");
+        process::exit(64);
+
+    } else if args_len == 2 {
+        // Run the file
+        // run_source(&args[1]);
+        eprintln!("Icy does not support non-REPL executions at this moment");
+        // let _source = fs::read_to_string(_cmd_args.file_path).expect("[ICY] ERROR: Could not read file").as_str();
+        process::exit(64);
+    } else {
+        // Run REPL
+        run_repl();
+    }
 }
-//     let args: Vec<String> = env::args().collect();
-//     let args_len: usize = args.len();
 
-//     if args_len > 2 {
-//         eprintln!("Usage: icy [script_name].icy");
-//         process::exit(64);
+fn run_repl() {
+    println!("Welcome to the Icy programming language");
+    let mut exit_repl = false;
+    const PROMPT_HEADER: &str = ">> ";
 
-//     } else if args_len == 2 {
-//         // Run the file
-//         run_source(&args[1]);
-//     } else {
-//         // Run REPL
-//     }
-// }
+    while !exit_repl {
+        print!("{}", PROMPT_HEADER);
+        _ = std::io::stdout().flush();
+
+        let mut line = String::new();
+
+        _ = std::io::stdin().read_line(&mut line);
+
+        let mut lexer = Lexer::new(line.as_str());
+        let mut token = lexer.next();
+        
+        loop {
+            if token.kind == TokenKind::Eof { 
+                exit_repl = true;
+                break
+            }
+
+            println!("{:?}", token);
+
+            if token.kind == TokenKind::Newline { 
+                break
+            }
+
+            token = lexer.next();
+        }
+
+    }
+}
 
 
 // fn run_source(path: &str) {
@@ -48,6 +92,17 @@ fn main() {
 //     Ok(())
 // }
 
+
+
+// struct CommandArguments {
+//     file_path: String,
+// }
+
+// fn parse_args(args: &[String]) -> CommandArguments {
+//     CommandArguments { 
+//         file_path: args[1].clone(),
+//     }
+// }
 
 // ---
 // IcyError Structure

@@ -10,14 +10,25 @@ pub enum TokenKind {
     RParen,         // )
     LBrace,         // {
     RBrace,         // }
+    LAngle,         // <
+    RAngle,         // >
+    LBracket,       // [
+    RBracket,       // ]
     Comma,          // ,
     Colon,          // :
+    SemiColon,      // ;
 
     // Operators
     Equals,         // =
-    InferEquals,    // :=
+    EqualsEquals,   // ==
+    Infer,          // :=
+    Bang,           // !
+    BangEquals,     // !=
     Plus,           // +
     Minus,          // -
+    Slash,          // /
+    Asterisk,       // *
+    QMark,          // ?
 
     // Literals
     Ident,     
@@ -30,5 +41,13 @@ pub enum TokenKind {
     Var,            // Variable decl
     Void,           // void
     Return,         // return
+    True,           // true
+    False,          // false
+    If,             // if
+    Else,           // Else
+    // And,            // and
+    // Or,             // or
+    // For,            // for
+
 
 }

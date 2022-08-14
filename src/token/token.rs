@@ -1,5 +1,5 @@
 use std::fmt;
-use phf::{phf_map, Map};
+use phf::{phf_map};
 
 use super::token_kind::TokenKind;
 
@@ -9,6 +9,11 @@ static KEYWORDS: phf::Map<&'static str, TokenKind> = phf_map!{
     "var" => TokenKind::Var,
     "void" => TokenKind::Void,
     "return" => TokenKind::Return,
+    "true" => TokenKind::True,
+    "false" => TokenKind::False,
+    "if" => TokenKind::If,
+    "else" => TokenKind::Else,
+    "exit" => TokenKind::Eof,
 };
 
 pub fn lookup_indentifier(token_indent: &str) -> TokenKind {
@@ -20,6 +25,7 @@ pub fn lookup_indentifier(token_indent: &str) -> TokenKind {
 }
 
 
+#[derive(Debug)]
 pub struct Token {
     pub kind: TokenKind,
     pub literal: String,

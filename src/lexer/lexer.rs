@@ -41,13 +41,29 @@ impl Lexer {
                     ')' => token = Token::new(TokenKind::RParen, char_str, self.line),
                     '{' => token = Token::new(TokenKind::LBrace, char_str, self.line),
                     '}' => token = Token::new(TokenKind::RBrace, char_str, self.line),
+                    '<' => token = Token::new(TokenKind::LAngle, char_str, self.line),
+                    '>' => token = Token::new(TokenKind::RAngle, char_str, self.line),
+                    '[' => token = Token::new(TokenKind::LBracket, char_str, self.line),
+                    ']' => token = Token::new(TokenKind::RBracket, char_str, self.line),
                     ',' => token = Token::new(TokenKind::Comma, char_str, self.line),
-                    ':' => token = Token::new(TokenKind::Colon, char_str, self.line),
+                    ';' => token = Token::new(TokenKind::SemiColon, char_str, self.line),
+                    ':' => {
+                        token = self.peek_match('=', TokenKind::Infer, TokenKind::Colon, ":=", char_str);
+                    }
                     
                     // Operators
-                    '=' => token = Token::new(TokenKind::Equals, char_str, self.line),
+                    '=' => { 
+                        token = self.peek_match('=', TokenKind::EqualsEquals, TokenKind::Equals, "==", char_str);
+                    },
+                    '!' => { 
+                        token = self.peek_match('=', TokenKind::BangEquals, TokenKind::Bang, "!=", char_str);
+                    }, 
                     '+' => token = Token::new(TokenKind::Plus, char_str, self.line),
                     '-' => token = Token::new(TokenKind::Minus, char_str, self.line),
+                    '*' => token = Token::new(TokenKind::Asterisk, char_str, self.line),
+                    '/' => token = Token::new(TokenKind::Slash, char_str, self.line),
+                    '?' => token = Token::new(TokenKind::QMark, char_str, self.line),
+                    
                     
                     _ => {
                         if self.is_alphabetic(Some(c)) {
@@ -102,6 +118,26 @@ impl Lexer {
         self.offset += 1;
     }
 
+    fn peek(self: & Self) -> Option<char> {
+        if self.offset >= self.source.len() {
+            None
+        } else {
+            self.source.chars().nth(self.offset)
+        }
+    }
+
+    fn peek_match(self: &mut Self, c: char, match_token_kind: TokenKind, else_token_kind: TokenKind, match_literal: &str, else_literal: &str) -> Token {
+        let peek_result = self.peek();
+        let has_value = peek_result.is_some();
+
+        if has_value && peek_result.unwrap() == c {
+            self.read();
+            Token::new(match_token_kind, match_literal, self.line)
+        } else {
+            Token::new(else_token_kind, else_literal, self.line)
+        }
+    }
+
     fn is_alphabetic(self: &Self, copt: Option<char>) -> bool {
         match copt {
             Some(c) => return c.is_alphabetic() || c == '_',
@@ -144,9 +180,10 @@ mod lexer_tests {
     use crate::token::token_kind::TokenKind;
 
     #[test]
-    fn next_token() {
-        println!("[lexer_tests]: next_token");
-        let delim_and_ops: String = String::from("=+-(){},:\n");
+    fn kinds() {
+        println!("[lexer_tests]: kinds");
+        // let delim_and_ops: String = String::from("=+-(){},:\n==:=!!=/*?;<>[]");
+        let delim_and_ops: String = String::from("=+-(){},:\n!/*?;<>[]");
         let test_tokens: Vec<Token> = vec![
             Token::new(TokenKind::Equals, "=", 1),
             Token::new(TokenKind::Plus,   "+", 1),
@@ -158,6 +195,18 @@ mod lexer_tests {
             Token::new(TokenKind::Comma,  ",", 1),
             Token::new(TokenKind::Colon,  ":", 1),
             Token::new(TokenKind::Newline, "\n", 1),
+            // Token::new(TokenKind::EqualsEquals, "==", 2),
+            // Token::new(TokenKind::Infer, ":=", 2),
+            Token::new(TokenKind::Bang, "!", 2),
+            // Token::new(TokenKind::BangEquals, "!=", 2),
+            Token::new(TokenKind::Slash, "/", 2),
+            Token::new(TokenKind::Asterisk, "*", 2),
+            Token::new(TokenKind::QMark, "?", 2),
+            Token::new(TokenKind::SemiColon, ";", 2),
+            Token::new(TokenKind::LAngle, "<", 2),
+            Token::new(TokenKind::RAngle, ">", 2),
+            Token::new(TokenKind::LBracket, "[", 2),
+            Token::new(TokenKind::RBracket, "]", 2),
         ];
 
         let mut lexer: Lexer = Lexer::new(&delim_and_ops);
@@ -170,9 +219,10 @@ mod lexer_tests {
         }
     }
 
+
     #[test]
     fn basic_add() {
-        println!("[lexer_tests]: basic main");
+        println!("[lexer_tests]: basic add");
 
         let bytes: String = fs::read_to_string("src/tests/icy/add.icy").expect("File could not be found");
         
@@ -230,6 +280,59 @@ mod lexer_tests {
 
             // }
             Token::new(TokenKind::RBrace, "}", 9),
+            Token::new(TokenKind::Newline, "\n", 9),
+
+            Token::new(TokenKind::Newline, "\n", 10),
+            
+            // if(added > 10) {
+            Token::new(TokenKind::If, "if", 11),
+            Token::new(TokenKind::LParen, "(", 11),
+            Token::new(TokenKind::Ident, "added", 11),
+            Token::new(TokenKind::RAngle, ">", 11),
+            Token::new(TokenKind::Int, "10", 11),
+            Token::new(TokenKind::RParen, ")", 11),
+            Token::new(TokenKind::LBrace, "{", 11),
+            Token::new(TokenKind::Newline, "\n", 11),
+            
+            // return true
+            Token::new(TokenKind::Return, "return", 12),
+            Token::new(TokenKind::True, "true", 12),
+            Token::new(TokenKind::Newline, "\n", 12),
+
+            // } else {
+            Token::new(TokenKind::RBrace, "}", 13),
+            Token::new(TokenKind::Else, "else", 13),
+            Token::new(TokenKind::LBrace, "{", 13),
+            Token::new(TokenKind::Newline, "\n", 13),
+
+            // return false
+            Token::new(TokenKind::Return, "return", 14),
+            Token::new(TokenKind::False, "false", 14),
+            Token::new(TokenKind::Newline, "\n", 14),
+            
+            // }
+            Token::new(TokenKind::RBrace, "}", 15),
+            Token::new(TokenKind::Newline, "\n", 15),
+
+            Token::new(TokenKind::Newline, "\n", 16),
+
+            // 10 == 9
+            Token::new(TokenKind::Int, "10", 17),
+            Token::new(TokenKind::EqualsEquals, "==", 17),
+            Token::new(TokenKind::Int, "9", 17),
+            Token::new(TokenKind::Newline, "\n", 17),
+
+            // 10 != 8
+            Token::new(TokenKind::Int, "10", 18),
+            Token::new(TokenKind::BangEquals, "!=", 18),
+            Token::new(TokenKind::Int, "8", 18),
+            Token::new(TokenKind::Newline, "\n", 18),
+
+            // var infer_me_daddy := 1
+            Token::new(TokenKind::Var, "var", 19),
+            Token::new(TokenKind::Ident, "infer_me_daddy", 19),
+            Token::new(TokenKind::Infer, ":=", 19),
+            Token::new(TokenKind::Int, "1", 19),
 
         ];
 

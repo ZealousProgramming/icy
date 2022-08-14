@@ -7,3 +7,13 @@ var added = add(five, ten)
 func add(x, y) {
     return x + y
 }
+
+if(added > 10) { 
+    return true    
+} else {
+    return false
+}
+
+10 == 9
+10 != 8
+var infer_me_daddy := 1
