@@ -1,0 +1,4 @@
+func main(): void {
+    var hello_world: string = 'Hello world!'
+    println(hello_world) 
+}
