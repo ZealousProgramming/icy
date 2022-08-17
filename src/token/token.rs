@@ -1,5 +1,5 @@
 use std::fmt;
-use phf::{phf_map};
+use phf::phf_map;
 
 use super::token_kind::TokenKind;
 
@@ -20,12 +20,12 @@ pub fn lookup_indentifier(token_indent: &str) -> TokenKind {
     if let Some(tok) = KEYWORDS.get(token_indent).cloned() {
         tok
     } else {
-        TokenKind::Ident
+        TokenKind::Ident(token_indent.to_string())
     }
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub kind: TokenKind,
     pub literal: String,

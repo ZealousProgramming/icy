@@ -4,8 +4,11 @@ use std::{
     process,
     // fs,
 };
+
 mod lexer;
 mod token;
+mod ast;
+mod parser;
 
 use crate::lexer::lexer::Lexer;
 use crate::token::token_kind::TokenKind;

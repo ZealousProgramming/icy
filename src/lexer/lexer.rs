@@ -3,18 +3,18 @@ use crate::token::token::{
     lookup_indentifier,
 };
 use crate::token::token_kind::TokenKind;
-pub struct Lexer {
-    source: String, // The source code
+pub struct Lexer<'a> {
+    source: &'a str, // The source code
     pos: usize, // The position from the start of the source
     offset: usize,  // The offset from `pos`
     cc: Option<char>, // Current Character
     line: usize, // The current line in the source code
 }
 
-impl Lexer {
-    pub fn new(source: &str) -> Self {
+impl<'a> Lexer<'a> {
+    pub fn new(source: &'a str) -> Self {
        let mut inst = Self { 
-            source: String::from(source),
+            source,
             pos: 0,
             offset: 0,
             cc: None,
@@ -89,7 +89,7 @@ impl Lexer {
                             let literal = &self.source[starting_pos..self.pos];
 
 
-                            token = Token::new(TokenKind::Int, literal, self.line);
+                            token = Token::new(TokenKind::Int(literal.parse::<i64>().unwrap()), literal, self.line);
                             return token;
                         }else {
                             _ = eprintln!("LINE {:?} Unexpected character", self.line);
@@ -99,7 +99,9 @@ impl Lexer {
 
                 }
             },
-            None => token = Token::new(TokenKind::Eof, "", self.line), // EOF
+            None => {
+                return Token::new(TokenKind::Eof, "", self.line); // EOF
+            },
         }
         
         self.read();
@@ -161,6 +163,8 @@ impl Lexer {
                 } else {
                     found_non_ws = true;
                 }
+            } else {
+                found_non_ws = true;
             }
         }
     }
@@ -230,31 +234,31 @@ mod lexer_tests {
             Token::new(TokenKind::Newline, "\n", 1),
             // var ten = 10
             Token::new(TokenKind::Var, "var", 2),
-            Token::new(TokenKind::Ident, "ten", 2),
+            Token::new(TokenKind::Ident("ten".to_string()), "ten", 2),
             // Token::new(TokenKind::InferEquals, ":=", 2),
             Token::new(TokenKind::Equals, "=", 2),
-            Token::new(TokenKind::Int, "10", 2),
+            Token::new(TokenKind::Int(10), "10", 2),
             Token::new(TokenKind::Newline, "\n", 2),
             // var five = 5
             Token::new(TokenKind::Var, "var", 3),
-            Token::new(TokenKind::Ident, "five", 3),
+            Token::new(TokenKind::Ident("five".to_string()), "five", 3),
             // Token::new(TokenKind::InferEquals, ":=", 3),
             Token::new(TokenKind::Equals, "=", 3),
-            Token::new(TokenKind::Int, "5", 3),
+            Token::new(TokenKind::Int(5), "5", 3),
             Token::new(TokenKind::Newline, "\n", 3),
 
             Token::new(TokenKind::Newline, "\n", 3),
 
             // var added = add(five, ten)
             Token::new(TokenKind::Var, "var", 5),
-            Token::new(TokenKind::Ident, "added", 5),
+            Token::new(TokenKind::Ident("added".to_string()), "added", 5),
             // Token::new(TokenKind::InferEquals, ":=", 5),
             Token::new(TokenKind::Equals, "=", 5),
-            Token::new(TokenKind::Ident, "add", 5),
+            Token::new(TokenKind::Ident("add".to_string()), "add", 5),
             Token::new(TokenKind::LParen, "(", 5),
-            Token::new(TokenKind::Ident, "five", 5),
+            Token::new(TokenKind::Ident("five".to_string()), "five", 5),
             Token::new(TokenKind::Comma, ",", 5),
-            Token::new(TokenKind::Ident, "ten", 5),
+            Token::new(TokenKind::Ident("ten".to_string()), "ten", 5),
             Token::new(TokenKind::RParen, ")", 5),
             Token::new(TokenKind::Newline, "\n", 5),
 
@@ -262,20 +266,20 @@ mod lexer_tests {
 
             // func add(x, y) {
             Token::new(TokenKind::Function, "func", 7),
-            Token::new(TokenKind::Ident, "add", 7),
+            Token::new(TokenKind::Ident("add".to_string()), "add", 7),
             Token::new(TokenKind::LParen, "(", 7),
-            Token::new(TokenKind::Ident, "x", 7),
+            Token::new(TokenKind::Ident("x".to_string()), "x", 7),
             Token::new(TokenKind::Comma, ",", 7),
-            Token::new(TokenKind::Ident, "y", 7),
+            Token::new(TokenKind::Ident("y".to_string()), "y", 7),
             Token::new(TokenKind::RParen, ")", 7),
             Token::new(TokenKind::LBrace, "{", 7),
             Token::new(TokenKind::Newline, "\n", 7),
 
             // return x + y
             Token::new(TokenKind::Return, "return", 8),
-            Token::new(TokenKind::Ident, "x", 8),
+            Token::new(TokenKind::Ident("x".to_string()), "x", 8),
             Token::new(TokenKind::Plus, "+", 8),
-            Token::new(TokenKind::Ident, "y", 8),
+            Token::new(TokenKind::Ident("y".to_string()), "y", 8),
             Token::new(TokenKind::Newline, "\n", 8),
 
             // }
@@ -287,9 +291,9 @@ mod lexer_tests {
             // if(added > 10) {
             Token::new(TokenKind::If, "if", 11),
             Token::new(TokenKind::LParen, "(", 11),
-            Token::new(TokenKind::Ident, "added", 11),
+            Token::new(TokenKind::Ident("added".to_string()), "added", 11),
             Token::new(TokenKind::RAngle, ">", 11),
-            Token::new(TokenKind::Int, "10", 11),
+            Token::new(TokenKind::Int(10), "10", 11),
             Token::new(TokenKind::RParen, ")", 11),
             Token::new(TokenKind::LBrace, "{", 11),
             Token::new(TokenKind::Newline, "\n", 11),
@@ -317,22 +321,22 @@ mod lexer_tests {
             Token::new(TokenKind::Newline, "\n", 16),
 
             // 10 == 9
-            Token::new(TokenKind::Int, "10", 17),
+            Token::new(TokenKind::Int(10), "10", 17),
             Token::new(TokenKind::EqualsEquals, "==", 17),
-            Token::new(TokenKind::Int, "9", 17),
+            Token::new(TokenKind::Int(9), "9", 17),
             Token::new(TokenKind::Newline, "\n", 17),
 
             // 10 != 8
-            Token::new(TokenKind::Int, "10", 18),
+            Token::new(TokenKind::Int(10), "10", 18),
             Token::new(TokenKind::BangEquals, "!=", 18),
-            Token::new(TokenKind::Int, "8", 18),
+            Token::new(TokenKind::Int(8), "8", 18),
             Token::new(TokenKind::Newline, "\n", 18),
 
             // var infer_me_daddy := 1
             Token::new(TokenKind::Var, "var", 19),
-            Token::new(TokenKind::Ident, "infer_me_daddy", 19),
+            Token::new(TokenKind::Ident("infer_me_daddy".to_string()), "infer_me_daddy", 19),
             Token::new(TokenKind::Infer, ":=", 19),
-            Token::new(TokenKind::Int, "1", 19),
+            Token::new(TokenKind::Int(1), "1", 19),
 
         ];
 

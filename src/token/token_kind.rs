@@ -1,4 +1,4 @@
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[allow(dead_code)]
 pub enum TokenKind {
     Illegal,
@@ -31,9 +31,9 @@ pub enum TokenKind {
     QMark,          // ?
 
     // Literals
-    Ident,     
-    String,         // string
-    Int,            // int
+    Ident(String),     
+    String(String),         // string
+    Int(i64),            // int
 
 
     // Keywords
