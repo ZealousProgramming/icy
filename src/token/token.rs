@@ -20,7 +20,7 @@ pub fn lookup_indentifier(token_indent: &str) -> TokenKind {
     if let Some(tok) = KEYWORDS.get(token_indent).cloned() {
         tok
     } else {
-        TokenKind::Ident(token_indent.to_string())
+        TokenKind::Ident
     }
 }
 

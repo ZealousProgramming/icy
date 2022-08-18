@@ -31,9 +31,9 @@ pub enum TokenKind {
     QMark,          // ?
 
     // Literals
-    Ident(String),     
-    String(String),         // string
-    Int(i64),            // int
+    Ident,     
+    String,         // string
+    Int,            // int
 
 
     // Keywords

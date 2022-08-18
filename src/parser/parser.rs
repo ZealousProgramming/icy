@@ -12,6 +12,7 @@ pub struct Parser<'a> {
     lexer: Lexer<'a>,
     current_token: Token,
     peek_token: Token,
+    pub errors: Vec<String>,
 }
 
 impl<'a> Parser<'a> {
@@ -20,6 +21,7 @@ impl<'a> Parser<'a> {
             lexer, 
             current_token: Token::new(TokenKind::Illegal, "", 0),
             peek_token: Token::new(TokenKind::Illegal, "", 0),
+            errors: Vec::new(),
         };
 
         parser_inst.next();
@@ -53,15 +55,16 @@ impl<'a> Parser<'a> {
         self.peek_token = self.lexer.next();
     }
 
-    fn peek_match(self: &mut Self, t: TokenKind) -> bool {
-        if self.peek_token.kind == t {
-            self.next();
+    // fn peek_match(self: &mut Self, t: TokenKind) -> bool {
+    //     if self.peek_token.kind == t {
+    //         self.next();
             
-            return true;
-        }
+    //         return true;
+    //     }
 
-        false
-    }
+    //     self.peek_error(t);
+    //     false
+    // }
 
     fn parse_statement(self: &mut Self) -> Option<Statement> {
         match self.current_token.kind {
@@ -73,15 +76,21 @@ impl<'a> Parser<'a> {
     fn parse_var_statement(self: &mut Self) -> Option<Statement> {
 
         match self.peek_token.kind {
-            TokenKind::Ident(_) => self.next(),
-            _ => return None,
+            TokenKind::Ident => self.next(),
+            _ => {
+                self.peek_error(TokenKind::Ident);
+                return None
+            },
         }
 
         let ident = Identifier(self.current_token.literal.clone());
 
         match self.peek_token.kind {
             TokenKind::Equals => self.next(),
-           _ => return None,
+            _ => {
+                self.peek_error(TokenKind::Equals);
+                return None
+            },
         }
 
         loop {
@@ -94,6 +103,11 @@ impl<'a> Parser<'a> {
 
         Some(Statement::Var(ident, None))
     }
+
+    fn peek_error(self: &mut Self, kind: TokenKind) {
+        self.errors.push(format!("expected next token to be {:?}, but found {:?}", kind, self.peek_token.kind));
+    }
+
 }
 
 // ----- Tests -----
@@ -109,6 +123,26 @@ mod parser_tests {
     };
 
     #[test]
+    fn parse_errors() {
+        println!("[parser_tests]: errors");
+
+        let bytes: String = fs::read_to_string("src/tests/icy/parsing_errors.icy").expect("File could not be found");
+
+        let mut parser = Parser::new(Lexer::new(bytes.as_str()));
+
+        let _program: Program = parser.parse();
+
+        // Check for Parser Errors
+        let errors = parser.errors;
+
+        // for error in errors.iter().enumerate() {
+        //     println!("Paser Error: {:?}", error);
+        // }
+
+        assert_eq!(errors.len(), 3);
+    }
+
+    #[test]
     fn var_binding() {
         println!("[parser_tests]: bindings");
 
@@ -117,6 +151,17 @@ mod parser_tests {
         let mut parser = Parser::new(Lexer::new(bytes.as_str()));
 
         let program: Program = parser.parse();
+
+        // Check for Parser Errors
+        let errors = parser.errors;
+
+        if errors.len() > 0 {
+            for error in errors.iter().enumerate() {
+                println!("Paser Error: {:?}", error);
+            }
+
+            assert_eq!(errors.len(), 0);
+        }
 
         let tests = vec![
             "bind_me_daddy".to_string(),
